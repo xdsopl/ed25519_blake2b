@@ -10,6 +10,9 @@ CFLAGS += -std=c89 -W -Wall -O2 -Iquirks
 BLAKE2 = -Iblake2_ref
 CRYPTO = -Ied25519_ref -DCRYPTO_NAMESPACE\(name\)=crypto_\#\#name
 
+assets/crypto.wasm.gz: assets/crypto.wasm
+	gzip -f -n $<
+
 assets/crypto.wasm: temp/string.o temp/blake2b-ref.o temp/fe25519.o temp/sc25519.o temp/ge25519.o temp/sign.o temp/keypair.o temp/open.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
