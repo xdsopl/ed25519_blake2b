@@ -20,13 +20,28 @@ WebAssembly.instantiateStreaming(fetch("crypto.wasm"))
 		buffer = wasm.memory.buffer;
 		//console.log(wasm);
 		let random_bytes = new Uint8Array(buffer, wasm.random_bytes, 32);
+		self.crypto.getRandomValues(random_bytes);
+		print_hex("Random Bytes", random_bytes);
 		let private_key = new Uint8Array(buffer, wasm.private_key, 64);
 		let public_key = new Uint8Array(buffer, wasm.public_key, 32);
-		self.crypto.getRandomValues(random_bytes);
 		wasm.create_keypair();
-		print_hex("Random Bytes", random_bytes);
 		print_hex("Private Key", private_key);
 		print_hex("Public Key", public_key);
+		let message_length = 42;
+		let message = new Uint8Array(buffer, wasm.message, message_length);
+		for (let i = 0; i < message.length; ++i)
+			message[i] = Math.trunc(Math.random() * 256);
+		print_hex("Message", message);
+		wasm.sign_message(message_length);
+		let signature_length = message_length + 64;
+		let signature = new Uint8Array(buffer, wasm.signature, signature_length);
+		print_hex("Signature", signature);
+		for (let i = 0; i < message.length; ++i)
+			message[i] = 0;
+		//signature[Math.trunc(Math.random() * signature_length)] ^= 1 << Math.trunc(Math.random() * 8);
+		if (wasm.open_signature(signature_length) < 0)
+			document.getElementById("output").innerHTML += "Verification failed!<br />"
+		print_hex("Message", message);
 	});
 </script>
 <p>
