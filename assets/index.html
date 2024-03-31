@@ -21,19 +21,20 @@ WebAssembly.instantiateStreaming(fetch("crypto.wasm"))
 		buffer = wasm.memory.buffer;
 		//console.log(wasm);
 		let start = performance.now();
-		let keypair = new Uint8Array(buffer, wasm.keypair, 64);
-		self.crypto.getRandomValues(keypair);
+		let private_key = new Uint8Array(buffer, wasm.keypair, 32);
+		self.crypto.getRandomValues(private_key);
 		let end = performance.now();
 		output.innerHTML += "getRandomValues: " + (end - start).toFixed(2) + " ms<br />";
-		print_hex("Random Bytes", keypair, 32);
+		print_hex("Private Key", private_key, 32);
 		start = performance.now();
 		wasm.create_keypair();
 		end = performance.now();
 		output.innerHTML += "create_keypair: " + (end - start).toFixed(2) + " ms<br />";
-		print_hex("Key Pair", keypair, 64);
+		let fingerprint = new Uint8Array(buffer, wasm.keypair+32, 32);
+		print_hex("Fingerprint", fingerprint, 32);
 		let message_length = 42;
 		let signed_length = message_length + 64;
-		let message = new Uint8Array(buffer, wasm.message, signed_length);
+		let message = new Uint8Array(buffer, wasm.message, 1024);
 		for (let i = 0; i < message_length; ++i)
 			message[i] = Math.trunc(Math.random() * 256);
 		print_hex("Message", message, message_length);
