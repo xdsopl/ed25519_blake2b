@@ -20,20 +20,17 @@ WebAssembly.instantiateStreaming(fetch("crypto.wasm"))
 		const wasm = obj.instance.exports;
 		buffer = wasm.memory.buffer;
 		//console.log(wasm);
-		let random_bytes = new Uint8Array(buffer, wasm.random_bytes, 32);
 		let start = performance.now();
-		self.crypto.getRandomValues(random_bytes);
+		let keypair = new Uint8Array(buffer, wasm.keypair, 64);
+		self.crypto.getRandomValues(keypair);
 		let end = performance.now();
 		output.innerHTML += "getRandomValues: " + (end - start).toFixed(2) + " ms<br />";
-		print_hex("Random Bytes", random_bytes);
-		let private_key = new Uint8Array(buffer, wasm.private_key, 64);
-		let public_key = new Uint8Array(buffer, wasm.public_key, 32);
+		print_hex("Random Bytes", keypair);
 		start = performance.now();
 		wasm.create_keypair();
 		end = performance.now();
 		output.innerHTML += "create_keypair: " + (end - start).toFixed(2) + " ms<br />";
-		print_hex("Private Key", private_key);
-		print_hex("Public Key", public_key);
+		print_hex("Key Pair", keypair);
 		let message_length = 42;
 		let message = new Uint8Array(buffer, wasm.message, message_length);
 		for (let i = 0; i < message.length; ++i)

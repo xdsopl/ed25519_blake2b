@@ -18,6 +18,8 @@ void *memcpy(void *dst, const void *src, size_t len)
 {
 	char *d = dst;
 	const char *s = src;
+	if (dst == src)
+		return dst;
 	while (len--)
 		*d++ = *s++;
 	return dst;
@@ -27,6 +29,8 @@ void *memmove(void *dst, const void *src, size_t len)
 {
 	char *d = dst;
 	const char *s = src;
+	if (dst == src)
+		return dst;
 	if (dst > src && dst < src + len) {
 		d += len - 1;
 		s += len - 1;

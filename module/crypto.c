@@ -5,9 +5,7 @@ Copyright 2024 Ahmet Inan <xdsopl@gmail.com>
 */
 
 __attribute__((visibility("default")))
-unsigned char public_key[32];
-__attribute__((visibility("default")))
-unsigned char private_key[64];
+unsigned char keypair[64];
 __attribute__((visibility("default")))
 unsigned char message[1024];
 __attribute__((visibility("default")))
@@ -27,18 +25,18 @@ __attribute__((visibility("default")))
 int sign_message(int mlen)
 {
 	unsigned long long smlen;
-	return crypto_sign(signature, &smlen, message, mlen, private_key);
+	return crypto_sign(signature, &smlen, message, mlen, keypair);
 }
 
 __attribute__((visibility("default")))
 int create_keypair()
 {
-	return crypto_sign_keypair(public_key, private_key);
+	return crypto_sign_keypair(keypair+32, keypair);
 }
 
 __attribute__((visibility("default")))
 int open_signature(int smlen)
 {
 	unsigned long long mlen;
-	return crypto_sign_open(message, &mlen, signature, smlen, public_key);
+	return crypto_sign_open(message, &mlen, signature, smlen, keypair+32);
 }
