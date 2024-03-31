@@ -6,9 +6,9 @@
 </head>
 <body>
 <script>
-function print_hex(name, buffer) {
+function print_hex(name, buffer, length) {
 	let str = name + ": ";
-	for (let i = 0; i < buffer.length; ++i)
+	for (let i = 0; i < length; ++i)
 		str += buffer[i].toString(16).padStart(2, '0').toUpperCase();
 	document.getElementById("output").innerHTML += str + "<br />";
 }
@@ -25,33 +25,30 @@ WebAssembly.instantiateStreaming(fetch("crypto.wasm"))
 		self.crypto.getRandomValues(keypair);
 		let end = performance.now();
 		output.innerHTML += "getRandomValues: " + (end - start).toFixed(2) + " ms<br />";
-		print_hex("Random Bytes", keypair);
+		print_hex("Random Bytes", keypair, 32);
 		start = performance.now();
 		wasm.create_keypair();
 		end = performance.now();
 		output.innerHTML += "create_keypair: " + (end - start).toFixed(2) + " ms<br />";
-		print_hex("Key Pair", keypair);
+		print_hex("Key Pair", keypair, 64);
 		let message_length = 42;
-		let message = new Uint8Array(buffer, wasm.message, message_length);
-		for (let i = 0; i < message.length; ++i)
+		let signed_length = message_length + 64;
+		let message = new Uint8Array(buffer, wasm.message, signed_length);
+		for (let i = 0; i < message_length; ++i)
 			message[i] = Math.trunc(Math.random() * 256);
-		print_hex("Message", message);
+		print_hex("Message", message, message_length);
 		start = performance.now();
 		wasm.sign_message(message_length);
 		end = performance.now();
 		output.innerHTML += "sign_message: " + (end - start).toFixed(2) + " ms<br />";
-		let signature_length = message_length + 64;
-		let signature = new Uint8Array(buffer, wasm.signature, signature_length);
-		print_hex("Signature", signature);
-		for (let i = 0; i < message.length; ++i)
-			message[i] = 0;
-		//signature[Math.trunc(Math.random() * signature_length)] ^= 1 << Math.trunc(Math.random() * 8);
+		print_hex("Signed", message, signed_length);
+		//message[Math.trunc(Math.random() * signed_length)] ^= 1 << Math.trunc(Math.random() * 8);
 		start = performance.now();
-		if (wasm.open_signature(signature_length) < 0)
+		if (wasm.open_message(signed_length) < 0)
 			output.innerHTML += "Verification failed!<br />";
 		end = performance.now();
-		output.innerHTML += "open_signature: " + (end - start).toFixed(2) + " ms<br />";
-		print_hex("Message", message);
+		output.innerHTML += "open_message: " + (end - start).toFixed(2) + " ms<br />";
+		print_hex("Message", message, message_length);
 	});
 </script>
 <p>

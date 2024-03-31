@@ -8,8 +8,6 @@ __attribute__((visibility("default")))
 unsigned char keypair[64];
 __attribute__((visibility("default")))
 unsigned char message[1024];
-__attribute__((visibility("default")))
-unsigned char signature[1024];
 
 int crypto_sign(unsigned char *sm, unsigned long long *smlen,
 	const unsigned char *m, unsigned long long mlen,
@@ -25,7 +23,7 @@ __attribute__((visibility("default")))
 int sign_message(int mlen)
 {
 	unsigned long long smlen;
-	return crypto_sign(signature, &smlen, message, mlen, keypair);
+	return crypto_sign(message, &smlen, message, mlen, keypair);
 }
 
 __attribute__((visibility("default")))
@@ -35,8 +33,8 @@ int create_keypair()
 }
 
 __attribute__((visibility("default")))
-int open_signature(int smlen)
+int open_message(int smlen)
 {
 	unsigned long long mlen;
-	return crypto_sign_open(message, &mlen, signature, smlen, keypair+32);
+	return crypto_sign_open(message, &mlen, message, smlen, keypair+32);
 }
