@@ -17,7 +17,7 @@ assets/crypto.wasm.gz: assets/crypto.wasm
 webserver:
 	go run tools/webserver.go
 
-assets/crypto.wasm: temp/string.o temp/blake2b-ref.o temp/fe25519.o temp/sc25519.o temp/ge25519.o temp/sign.o temp/keypair.o temp/open.o
+assets/crypto.wasm: temp/string.o temp/blake2b-ref.o temp/fe25519.o temp/sc25519.o temp/ge25519.o temp/sign.o temp/keypair.o temp/open.o temp/crypto.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 temp/blake2b-ref.o: blake2_ref/blake2b-ref.c
@@ -40,6 +40,9 @@ temp/keypair.o: ed25519_ref/keypair.c
 
 temp/open.o: ed25519_ref/open.c
 	$(CC) $(CFLAGS) $(BLAKE2) $(CRYPTO) -c -o $@ $<
+
+temp/crypto.o: module/crypto.c
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 temp/string.o: quirks/string.c
 	$(CC) $(CFLAGS) -c -o $@ $<
