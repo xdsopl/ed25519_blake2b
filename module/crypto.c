@@ -9,7 +9,7 @@ unsigned char public_key[32];
 __attribute__((visibility("default")))
 unsigned char private_key[64];
 __attribute__((visibility("default")))
-unsigned char message[1024-64];
+unsigned char message[1024];
 __attribute__((visibility("default")))
 unsigned char signature[1024];
 
