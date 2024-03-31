@@ -4,9 +4,13 @@ WebAssembly crypto module for digital signing based on Ed25519 and BLAKE2B
 Copyright 2024 Ahmet Inan <xdsopl@gmail.com>
 */
 
+__attribute__((visibility("default")))
 unsigned char public_key[32];
+__attribute__((visibility("default")))
 unsigned char private_key[64];
+__attribute__((visibility("default")))
 unsigned char message[1024-64];
+__attribute__((visibility("default")))
 unsigned char signature[1024];
 
 int crypto_sign(unsigned char *sm, unsigned long long *smlen,
