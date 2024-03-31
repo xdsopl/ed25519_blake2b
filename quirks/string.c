@@ -28,8 +28,8 @@ void *memmove(void *dst, const void *src, size_t len)
 	char *d = dst;
 	const char *s = src;
 	if (dst > src && dst < src + len) {
-		dst += len - 1;
-		src += len - 1;
+		d += len - 1;
+		s += len - 1;
 		while (len--)
 			*d-- = *s--;
 	} else {
