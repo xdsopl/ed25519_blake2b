@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Crypto Module</title>
+</head>
+<body>
+<script>
+function print_hex(name, buffer) {
+	let str = name + ": ";
+	for (let i = 0; i < buffer.length; ++i)
+		str += buffer[i].toString(16).padStart(2, '0').toUpperCase();
+	document.getElementById("output").innerHTML += str + "<br />";
+}
+WebAssembly.instantiateStreaming(fetch("crypto.wasm"))
+	.then(obj => {
+		document.body.style.color = "white";
+		document.body.style.backgroundColor = "black";
+		const wasm = obj.instance.exports;
+		buffer = wasm.memory.buffer;
+		//console.log(wasm);
+		let random_bytes = new Uint8Array(buffer, wasm.random_bytes, 32);
+		let private_key = new Uint8Array(buffer, wasm.private_key, 64);
+		let public_key = new Uint8Array(buffer, wasm.public_key, 32);
+		self.crypto.getRandomValues(random_bytes);
+		wasm.create_keypair();
+		print_hex("Random Bytes", random_bytes);
+		print_hex("Private Key", private_key);
+		print_hex("Public Key", public_key);
+	});
+</script>
+<p>
+<h1>Playing with Ed25519 and BLAKE2b</h1>
+WebAssembly crypto module for digital signing based on Ed25519 and BLAKE2B<br />
+Copyright 2024 Ahmet Inan &lt;xdsopl@gmail.com&gt;<br />
+</p>
+<p id="output"></p>
+</body>
+</html>
