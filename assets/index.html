@@ -4,32 +4,35 @@
 <meta charset="utf-8">
 <title>Crypto Module</title>
 </head>
-<body>
+<body style="color: white; background-color: black;">
 <script>
+function print_str(str) {
+	document.getElementById("output").innerHTML += str + "<br />";
+}
 function print_hex(name, buffer, length) {
 	let str = name + ": ";
 	for (let i = 0; i < length; ++i)
 		str += buffer[i].toString(16).padStart(2, '0').toUpperCase();
-	document.getElementById("output").innerHTML += str + "<br />";
+	print_str(str);
+}
+function print_ms(name, start, end) {
+	print_str(name + ": " + (end - start).toFixed(2) + " ms");
 }
 WebAssembly.instantiateStreaming(fetch("crypto.wasm"))
 	.then(obj => {
-		document.body.style.color = "white";
-		document.body.style.backgroundColor = "black";
-		let output = document.getElementById("output");
 		const wasm = obj.instance.exports;
 		buffer = wasm.memory.buffer;
 		//console.log(wasm);
-		let start = performance.now();
 		let private_key = new Uint8Array(buffer, wasm.keypair, 32);
-		self.crypto.getRandomValues(private_key);
+		let start = performance.now();
+		crypto.getRandomValues(private_key);
 		let end = performance.now();
-		output.innerHTML += "getRandomValues: " + (end - start).toFixed(2) + " ms<br />";
+		print_ms("getRandomValues", start, end);
 		print_hex("Private Key", private_key, 32);
 		start = performance.now();
 		wasm.create_keypair();
 		end = performance.now();
-		output.innerHTML += "create_keypair: " + (end - start).toFixed(2) + " ms<br />";
+		print_ms("create_keypair", start, end);
 		let fingerprint = new Uint8Array(buffer, wasm.keypair+32, 32);
 		print_hex("Fingerprint", fingerprint, 32);
 		let message_length = 42;
@@ -41,14 +44,14 @@ WebAssembly.instantiateStreaming(fetch("crypto.wasm"))
 		start = performance.now();
 		wasm.sign_message(message_length);
 		end = performance.now();
-		output.innerHTML += "sign_message: " + (end - start).toFixed(2) + " ms<br />";
+		print_ms("sign_message", start, end);
 		print_hex("Signed", message, signed_length);
 		//message[Math.trunc(Math.random() * signed_length)] ^= 1 << Math.trunc(Math.random() * 8);
 		start = performance.now();
 		if (wasm.open_message(signed_length) < 0)
-			output.innerHTML += "Verification failed!<br />";
+			print_str("Verification failed!");
 		end = performance.now();
-		output.innerHTML += "open_message: " + (end - start).toFixed(2) + " ms<br />";
+		print_ms("open_message", start, end);
 		print_hex("Message", message, message_length);
 	});
 </script>
