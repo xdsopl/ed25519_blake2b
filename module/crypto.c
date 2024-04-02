@@ -7,7 +7,7 @@ Copyright 2024 Ahmet Inan <xdsopl@gmail.com>
 __attribute__((visibility("default")))
 unsigned char keypair[64];
 __attribute__((visibility("default")))
-unsigned char message[1024];
+unsigned char message[1<<24];
 
 int crypto_sign(unsigned char *sm, unsigned long long *smlen,
 	const unsigned char *m, unsigned long long mlen,
