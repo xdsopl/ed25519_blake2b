@@ -4,37 +4,92 @@ WebAssembly crypto module for digital signing based on Ed25519 and BLAKE2B
 Copyright 2024 Ahmet Inan <xdsopl@gmail.com>
 */
 
-__attribute__((visibility("default")))
-unsigned char keypair[64];
-__attribute__((visibility("default")))
-unsigned char message[1<<24];
-
-int crypto_sign(unsigned char *sm, unsigned long long *smlen,
-	const unsigned char *m, unsigned long long mlen,
-	const unsigned char *sk);
-
-int crypto_sign_keypair(unsigned char *pk, unsigned char *sk);
-
-int crypto_sign_open(unsigned char *m, unsigned long long *mlen,
-	const unsigned char *sm, unsigned long long smlen,
-	const unsigned char *pk);
+#include <string.h>
+#include "blake2.h"
+#include "ge25519.h"
 
 __attribute__((visibility("default")))
-int sign_message(int mlen)
+unsigned char private_key[32];
+__attribute__((visibility("default")))
+unsigned char fingerprint[32];
+__attribute__((visibility("default")))
+unsigned char signature[1<<24];
+__attribute__((visibility("default")))
+unsigned char *message = signature + 64;
+
+static int hash(unsigned char *out, const unsigned char *in, int len)
 {
-	unsigned long long smlen;
-	return crypto_sign(message, &smlen, message, mlen, keypair);
+	return blake2b(out, BLAKE2B_OUTBYTES, in, len, NULL, 0);
+}
+
+static int verify(const unsigned char *x, const unsigned char *y)
+{
+	int len = 32, dif = 0;
+	while (len--)
+		dif |= *x++ ^ *y++;
+	return !!dif;
 }
 
 __attribute__((visibility("default")))
-int create_keypair()
+int create_signature(int mlen)
 {
-	return crypto_sign_keypair(keypair+32, keypair);
+	unsigned char az[64];
+	unsigned char nonce[64];
+	unsigned char hram[64];
+	sc25519 sck, scs, scsk;
+	ge25519 ger;
+	hash(az, private_key, 32);
+	az[0] &= 248;
+	az[31] &= 127;
+	az[31] |= 64;
+	memcpy(signature+32, az+32, 32);
+	hash(nonce, signature+32, mlen+32);
+	sc25519_from64bytes(&sck, nonce);
+	ge25519_scalarmult_base(&ger, &sck);
+	ge25519_pack(signature, &ger);
+	memcpy(signature+32, fingerprint, 32);
+	hash(hram, signature, mlen+64);
+	sc25519_from64bytes(&scs, hram);
+	sc25519_from32bytes(&scsk, az);
+	sc25519_mul(&scs, &scs, &scsk);
+	sc25519_add(&scs, &scs, &sck);
+	sc25519_to32bytes(signature+32, &scs);
+	return 0;
 }
 
 __attribute__((visibility("default")))
-int open_message(int smlen)
+int create_fingerprint()
 {
-	unsigned long long mlen;
-	return crypto_sign_open(message, &mlen, message, smlen, keypair+32);
+	unsigned char az[64];
+	sc25519 scsk;
+	ge25519 gepk;
+	hash(az, private_key, 32);
+	az[0] &= 248;
+	az[31] &= 127;
+	az[31] |= 64;
+	sc25519_from32bytes(&scsk, az);
+	ge25519_scalarmult_base(&gepk, &scsk);
+	ge25519_pack(fingerprint, &gepk);
+	return 0;
+}
+
+__attribute__((visibility("default")))
+int verify_signature(int mlen)
+{
+	unsigned char hram[64], rcheck[32], scopy[32];
+	ge25519 get1, get2;
+	sc25519 schram, scs;
+	if (signature[63] & 224)
+		return 1;
+	if (ge25519_unpackneg_vartime(&get1, fingerprint))
+		return 1;
+	sc25519_from32bytes(&scs, signature+32);
+	memcpy(scopy, signature+32, 32);
+	memcpy(signature+32, fingerprint, 32);
+	hash(hram, signature, mlen+64);
+	sc25519_from64bytes(&schram, hram);
+	ge25519_double_scalarmult_vartime(&get2, &get1, &schram, &ge25519_base, &scs);
+	ge25519_pack(rcheck, &get2);
+	memcpy(signature+32, scopy, 32);
+	return verify(signature, rcheck);
 }

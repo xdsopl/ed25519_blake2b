@@ -9,9 +9,9 @@
 function print_str(str) {
 	document.getElementById("output").innerHTML += str + "<br />";
 }
-function print_hex(name, buffer, length) {
+function print_hex(name, buffer) {
 	let str = name + ": ";
-	for (let i = 0; i < length; ++i)
+	for (let i = 0; i < buffer.length; ++i)
 		str += buffer[i].toString(16).padStart(2, '0').toUpperCase();
 	print_str(str);
 }
@@ -23,36 +23,37 @@ WebAssembly.instantiateStreaming(fetch("crypto.wasm"))
 		const wasm = obj.instance.exports;
 		buffer = wasm.memory.buffer;
 		//console.log(wasm);
-		let private_key = new Uint8Array(buffer, wasm.keypair, 32);
+		let private_key = new Uint8Array(buffer, wasm.private_key, 32);
 		let start = performance.now();
 		crypto.getRandomValues(private_key);
 		let end = performance.now();
 		print_ms("getRandomValues", start, end);
-		print_hex("Private Key", private_key, 32);
+		print_hex("Private Key", private_key);
 		start = performance.now();
-		wasm.create_keypair();
+		wasm.create_fingerprint();
 		end = performance.now();
-		print_ms("create_keypair", start, end);
-		let fingerprint = new Uint8Array(buffer, wasm.keypair+32, 32);
-		print_hex("Fingerprint", fingerprint, 32);
-		let message_length = 42;
-		let signed_length = message_length + 64;
-		let message = new Uint8Array(buffer, wasm.message, 1024);
-		for (let i = 0; i < message_length; ++i)
+		print_ms("create_fingerprint", start, end);
+		let fingerprint = new Uint8Array(buffer, wasm.fingerprint, 32);
+		print_hex("Fingerprint", fingerprint);
+		let message = new Uint8Array(buffer, wasm.message, 42);
+		for (let i = 0; i < message.length; ++i)
 			message[i] = Math.trunc(Math.random() * 256);
-		print_hex("Message", message, message_length);
+		print_hex("Message", message);
 		start = performance.now();
-		wasm.sign_message(message_length);
+		wasm.create_signature(message.length);
 		end = performance.now();
-		print_ms("sign_message", start, end);
-		print_hex("Signed", message, signed_length);
-		//message[Math.trunc(Math.random() * signed_length)] ^= 1 << Math.trunc(Math.random() * 8);
+		print_ms("create_signature", start, end);
+		let signature = new Uint8Array(buffer, wasm.signature, 64);
+		print_hex("Signature", signature);
+		//signature[Math.trunc(Math.random() * signature.length)] ^= 1 << Math.trunc(Math.random() * 8);
+		//message[Math.trunc(Math.random() * message.length)] ^= 1 << Math.trunc(Math.random() * 8);
 		start = performance.now();
-		if (wasm.open_message(signed_length) < 0)
+		if (wasm.verify_signature(message.length))
 			print_str("Verification failed!");
 		end = performance.now();
-		print_ms("open_message", start, end);
-		print_hex("Message", message, message_length);
+		print_ms("verify_signature", start, end);
+		print_hex("Signature", signature);
+		print_hex("Message", message);
 	});
 </script>
 <p>
