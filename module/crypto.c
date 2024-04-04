@@ -16,8 +16,6 @@ __attribute__((visibility("default")))
 unsigned char fingerprint[32];
 __attribute__((visibility("default")))
 unsigned char signature[1<<24];
-__attribute__((visibility("default")))
-unsigned char *message = signature + 64;
 
 static int hash(unsigned char *out, const unsigned char *in, int len)
 {

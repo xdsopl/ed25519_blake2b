@@ -35,7 +35,7 @@ WebAssembly.instantiateStreaming(fetch("crypto.wasm"))
 		print_ms("create_fingerprint", start, end);
 		let fingerprint = new Uint8Array(buffer, wasm.fingerprint, 32);
 		print_hex("Fingerprint", fingerprint);
-		let message = new Uint8Array(buffer, wasm.message, 42);
+		let message = new Uint8Array(buffer, wasm.signature+64, 42);
 		for (let i = 0; i < message.length; ++i)
 			message[i] = Math.trunc(Math.random() * 256);
 		print_hex("Message", message);
