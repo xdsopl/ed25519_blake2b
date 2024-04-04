@@ -8,6 +8,8 @@ Copyright 2024 Ahmet Inan <xdsopl@gmail.com>
 #include "blake2.h"
 #include "ge25519.h"
 
+#define MLEN_MAX (1 << 24)
+
 __attribute__((visibility("default")))
 unsigned char digest[64];
 __attribute__((visibility("default")))
@@ -17,11 +19,13 @@ unsigned char fingerprint[32];
 __attribute__((visibility("default")))
 unsigned char signature[64];
 __attribute__((visibility("default")))
-unsigned char message[1<<24];
+unsigned char message[MLEN_MAX];
 
 __attribute__((visibility("default")))
 int digest_message(int mlen)
 {
+	if (mlen < 0 || mlen > MLEN_MAX)
+		return 1;
 	blake2b_state state;
 	blake2b_init(&state, BLAKE2B_OUTBYTES);
 	blake2b_update(&state, message, mlen);
@@ -38,6 +42,8 @@ int create_signature(int mlen)
 	sc25519 sck, scs, scsk;
 	ge25519 ger;
 	blake2b_state state;
+	if (mlen < 0 || mlen > MLEN_MAX)
+		return 1;
 	blake2b_init(&state, BLAKE2B_OUTBYTES);
 	blake2b_update(&state, private_key, 32);
 	blake2b_final(&state, az, BLAKE2B_OUTBYTES);
@@ -90,6 +96,8 @@ int verify_signature(int mlen)
 	ge25519 get1, get2;
 	sc25519 schram, scs;
 	blake2b_state state;
+	if (mlen < 0 || mlen > MLEN_MAX)
+		return 1;
 	if (signature[63] & 224)
 		return 1;
 	if (ge25519_unpackneg_vartime(&get1, fingerprint))
