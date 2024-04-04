@@ -9,6 +9,8 @@ Copyright 2024 Ahmet Inan <xdsopl@gmail.com>
 #include "ge25519.h"
 
 __attribute__((visibility("default")))
+unsigned char digest[64];
+__attribute__((visibility("default")))
 unsigned char private_key[32];
 __attribute__((visibility("default")))
 unsigned char fingerprint[32];
@@ -28,6 +30,12 @@ static int verify(const unsigned char *x, const unsigned char *y)
 	while (len--)
 		dif |= *x++ ^ *y++;
 	return !!dif;
+}
+
+__attribute__((visibility("default")))
+int digest_message(int mlen)
+{
+	return hash(digest, signature+64, mlen);
 }
 
 __attribute__((visibility("default")))

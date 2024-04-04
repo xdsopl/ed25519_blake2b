@@ -45,6 +45,12 @@ WebAssembly.instantiateStreaming(fetch("crypto.wasm"))
 		print_ms("create_signature", start, end);
 		let signature = new Uint8Array(buffer, wasm.signature, 64);
 		print_hex("Signature", signature);
+		start = performance.now();
+		wasm.digest_message(message.length);
+		end = performance.now();
+		print_ms("digest_message", start, end);
+		let digest = new Uint8Array(buffer, wasm.digest, 64);
+		print_hex("Digest", digest);
 		//signature[Math.trunc(Math.random() * signature.length)] ^= 1 << Math.trunc(Math.random() * 8);
 		//message[Math.trunc(Math.random() * message.length)] ^= 1 << Math.trunc(Math.random() * 8);
 		start = performance.now();
@@ -54,6 +60,11 @@ WebAssembly.instantiateStreaming(fetch("crypto.wasm"))
 		print_ms("verify_signature", start, end);
 		print_hex("Signature", signature);
 		print_hex("Message", message);
+		start = performance.now();
+		wasm.digest_message(message.length);
+		end = performance.now();
+		print_ms("digest_message", start, end);
+		print_hex("Digest", digest);
 	});
 </script>
 <p>
