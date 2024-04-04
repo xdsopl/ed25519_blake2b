@@ -6,6 +6,18 @@ Copyright 2024 Ahmet Inan <xdsopl@gmail.com>
 
 #include "string.h"
 
+int memcmp(const void *s1, const void *s2, size_t len)
+{
+	const char *a = s1, *b = s2;
+	if (!len)
+		return 0;
+	while (--len && *a == *b) {
+		++a;
+		++b;
+	}
+	return *a - *b;
+}
+
 void *memset(void *buf, int val, size_t len)
 {
 	char *c = buf;

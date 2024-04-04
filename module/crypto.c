@@ -19,14 +19,6 @@ unsigned char signature[64];
 __attribute__((visibility("default")))
 unsigned char message[1<<24];
 
-static int verify(const unsigned char *x, const unsigned char *y)
-{
-	int len = 32, dif = 0;
-	while (len--)
-		dif |= *x++ ^ *y++;
-	return !!dif;
-}
-
 __attribute__((visibility("default")))
 int digest_message(int mlen)
 {
@@ -111,5 +103,5 @@ int verify_signature(int mlen)
 	sc25519_from64bytes(&schram, hram);
 	ge25519_double_scalarmult_vartime(&get2, &get1, &schram, &ge25519_base, &scs);
 	ge25519_pack(rcheck, &get2);
-	return verify(signature, rcheck);
+	return !!memcmp(signature, rcheck, 32);
 }
