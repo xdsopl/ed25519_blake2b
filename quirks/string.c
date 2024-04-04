@@ -8,7 +8,7 @@ Copyright 2024 Ahmet Inan <xdsopl@gmail.com>
 
 int memcmp(const void *s1, const void *s2, size_t len)
 {
-	const char *a = s1, *b = s2;
+	const unsigned char *a = s1, *b = s2;
 	if (!len)
 		return 0;
 	while (--len && *a == *b) {
@@ -20,7 +20,7 @@ int memcmp(const void *s1, const void *s2, size_t len)
 
 void *memset(void *buf, int val, size_t len)
 {
-	char *c = buf;
+	unsigned char *c = buf;
 	while (len--)
 		*c++ = val;
 	return buf;
@@ -28,8 +28,8 @@ void *memset(void *buf, int val, size_t len)
 
 void *memcpy(void *dst, const void *src, size_t len)
 {
-	char *d = dst;
-	const char *s = src;
+	unsigned char *d = dst;
+	const unsigned char *s = src;
 	if (dst == src)
 		return dst;
 	while (len--)
@@ -39,8 +39,8 @@ void *memcpy(void *dst, const void *src, size_t len)
 
 void *memmove(void *dst, const void *src, size_t len)
 {
-	char *d = dst;
-	const char *s = src;
+	unsigned char *d = dst;
+	const unsigned char *s = src;
 	if (dst == src)
 		return dst;
 	if (dst > src && dst < src + len) {
