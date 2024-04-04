@@ -15,12 +15,9 @@ unsigned char private_key[32];
 __attribute__((visibility("default")))
 unsigned char fingerprint[32];
 __attribute__((visibility("default")))
-unsigned char signature[1<<24];
-
-static int hash(unsigned char *out, const unsigned char *in, int len)
-{
-	return blake2b(out, BLAKE2B_OUTBYTES, in, len, NULL, 0);
-}
+unsigned char signature[64];
+__attribute__((visibility("default")))
+unsigned char message[1<<24];
 
 static int verify(const unsigned char *x, const unsigned char *y)
 {
@@ -33,7 +30,11 @@ static int verify(const unsigned char *x, const unsigned char *y)
 __attribute__((visibility("default")))
 int digest_message(int mlen)
 {
-	return hash(digest, signature+64, mlen);
+	blake2b_state state;
+	blake2b_init(&state, BLAKE2B_OUTBYTES);
+	blake2b_update(&state, message, mlen);
+	blake2b_final(&state, digest, BLAKE2B_OUTBYTES);
+	return 0;
 }
 
 __attribute__((visibility("default")))
@@ -44,17 +45,25 @@ int create_signature(int mlen)
 	unsigned char hram[64];
 	sc25519 sck, scs, scsk;
 	ge25519 ger;
-	hash(az, private_key, 32);
+	blake2b_state state;
+	blake2b_init(&state, BLAKE2B_OUTBYTES);
+	blake2b_update(&state, private_key, 32);
+	blake2b_final(&state, az, BLAKE2B_OUTBYTES);
 	az[0] &= 248;
 	az[31] &= 127;
 	az[31] |= 64;
-	memcpy(signature+32, az+32, 32);
-	hash(nonce, signature+32, mlen+32);
+	blake2b_init(&state, BLAKE2B_OUTBYTES);
+	blake2b_update(&state, az+32, 32);
+	blake2b_update(&state, message, mlen);
+	blake2b_final(&state, nonce, BLAKE2B_OUTBYTES);
 	sc25519_from64bytes(&sck, nonce);
 	ge25519_scalarmult_base(&ger, &sck);
 	ge25519_pack(signature, &ger);
-	memcpy(signature+32, fingerprint, 32);
-	hash(hram, signature, mlen+64);
+	blake2b_init(&state, BLAKE2B_OUTBYTES);
+	blake2b_update(&state, signature, 32);
+	blake2b_update(&state, fingerprint, 32);
+	blake2b_update(&state, message, mlen);
+	blake2b_final(&state, hram, BLAKE2B_OUTBYTES);
 	sc25519_from64bytes(&scs, hram);
 	sc25519_from32bytes(&scsk, az);
 	sc25519_mul(&scs, &scs, &scsk);
@@ -69,7 +78,10 @@ int create_fingerprint()
 	unsigned char az[64];
 	sc25519 scsk;
 	ge25519 gepk;
-	hash(az, private_key, 32);
+	blake2b_state state;
+	blake2b_init(&state, BLAKE2B_OUTBYTES);
+	blake2b_update(&state, private_key, 32);
+	blake2b_final(&state, az, BLAKE2B_OUTBYTES);
 	az[0] &= 248;
 	az[31] &= 127;
 	az[31] |= 64;
@@ -82,20 +94,22 @@ int create_fingerprint()
 __attribute__((visibility("default")))
 int verify_signature(int mlen)
 {
-	unsigned char hram[64], rcheck[32], scopy[32];
+	unsigned char hram[64], rcheck[32];
 	ge25519 get1, get2;
 	sc25519 schram, scs;
+	blake2b_state state;
 	if (signature[63] & 224)
 		return 1;
 	if (ge25519_unpackneg_vartime(&get1, fingerprint))
 		return 1;
 	sc25519_from32bytes(&scs, signature+32);
-	memcpy(scopy, signature+32, 32);
-	memcpy(signature+32, fingerprint, 32);
-	hash(hram, signature, mlen+64);
+	blake2b_init(&state, BLAKE2B_OUTBYTES);
+	blake2b_update(&state, signature, 32);
+	blake2b_update(&state, fingerprint, 32);
+	blake2b_update(&state, message, mlen);
+	blake2b_final(&state, hram, BLAKE2B_OUTBYTES);
 	sc25519_from64bytes(&schram, hram);
 	ge25519_double_scalarmult_vartime(&get2, &get1, &schram, &ge25519_base, &scs);
 	ge25519_pack(rcheck, &get2);
-	memcpy(signature+32, scopy, 32);
 	return verify(signature, rcheck);
 }
