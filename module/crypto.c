@@ -27,9 +27,9 @@ int digest_message(int mlen)
 	if (mlen < 0 || mlen > MLEN_MAX)
 		return 1;
 	blake2b_state state;
-	blake2b_init(&state, BLAKE2B_OUTBYTES);
+	blake2b_init(&state, 64);
 	blake2b_update(&state, message, mlen);
-	blake2b_final(&state, digest, BLAKE2B_OUTBYTES);
+	blake2b_final(&state, digest, 64);
 	return 0;
 }
 
@@ -44,24 +44,24 @@ int create_signature(int mlen)
 	blake2b_state state;
 	if (mlen < 0 || mlen > MLEN_MAX)
 		return 1;
-	blake2b_init(&state, BLAKE2B_OUTBYTES);
+	blake2b_init(&state, 64);
 	blake2b_update(&state, private_key, 32);
-	blake2b_final(&state, az, BLAKE2B_OUTBYTES);
+	blake2b_final(&state, az, 64);
 	az[0] &= 248;
 	az[31] &= 127;
 	az[31] |= 64;
-	blake2b_init(&state, BLAKE2B_OUTBYTES);
+	blake2b_init(&state, 64);
 	blake2b_update(&state, az+32, 32);
 	blake2b_update(&state, message, mlen);
-	blake2b_final(&state, nonce, BLAKE2B_OUTBYTES);
+	blake2b_final(&state, nonce, 64);
 	sc25519_from64bytes(&sck, nonce);
 	ge25519_scalarmult_base(&ger, &sck);
 	ge25519_pack(signature, &ger);
-	blake2b_init(&state, BLAKE2B_OUTBYTES);
+	blake2b_init(&state, 64);
 	blake2b_update(&state, signature, 32);
 	blake2b_update(&state, fingerprint, 32);
 	blake2b_update(&state, message, mlen);
-	blake2b_final(&state, hram, BLAKE2B_OUTBYTES);
+	blake2b_final(&state, hram, 64);
 	sc25519_from64bytes(&scs, hram);
 	sc25519_from32bytes(&scsk, az);
 	sc25519_mul(&scs, &scs, &scsk);
@@ -77,9 +77,9 @@ int create_fingerprint()
 	sc25519 scsk;
 	ge25519 gepk;
 	blake2b_state state;
-	blake2b_init(&state, BLAKE2B_OUTBYTES);
+	blake2b_init(&state, 64);
 	blake2b_update(&state, private_key, 32);
-	blake2b_final(&state, az, BLAKE2B_OUTBYTES);
+	blake2b_final(&state, az, 64);
 	az[0] &= 248;
 	az[31] &= 127;
 	az[31] |= 64;
@@ -103,11 +103,11 @@ int verify_signature(int mlen)
 	if (ge25519_unpackneg_vartime(&get1, fingerprint))
 		return 1;
 	sc25519_from32bytes(&scs, signature+32);
-	blake2b_init(&state, BLAKE2B_OUTBYTES);
+	blake2b_init(&state, 64);
 	blake2b_update(&state, signature, 32);
 	blake2b_update(&state, fingerprint, 32);
 	blake2b_update(&state, message, mlen);
-	blake2b_final(&state, hram, BLAKE2B_OUTBYTES);
+	blake2b_final(&state, hram, 64);
 	sc25519_from64bytes(&schram, hram);
 	ge25519_double_scalarmult_vartime(&get2, &get1, &schram, &ge25519_base, &scs);
 	ge25519_pack(rcheck, &get2);
