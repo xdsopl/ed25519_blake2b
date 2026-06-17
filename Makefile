@@ -10,14 +10,14 @@ CFLAGS += -std=c89 -W -Wall -pedantic -O2 -Iquirks
 BLAKE2 = -Iblake2_ref
 CRYPTO = -Ied25519_ref -DCRYPTO_NAMESPACE\(name\)=crypto_\#\#name
 
-assets/crypto.wasm.gz: assets/crypto.wasm
-	gzip -f -n $<
+assets/crypto.wasm.gz: temp/crypto.wasm
+	gzip -n -c $< > $@
 
 .PHONY: webserver
 webserver:
 	go run tools/webserver.go
 
-assets/crypto.wasm: temp/string.o temp/blake2b-ref.o temp/fe25519.o temp/sc25519.o temp/ge25519.o temp/crypto.o
+temp/crypto.wasm: temp/string.o temp/blake2b-ref.o temp/fe25519.o temp/sc25519.o temp/ge25519.o temp/crypto.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 temp/blake2b-ref.o: blake2_ref/blake2b-ref.c blake2_ref/blake2.h blake2_ref/blake2-impl.h quirks/string.h
