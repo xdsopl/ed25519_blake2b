@@ -25,7 +25,7 @@ __attribute__((visibility("default")))
 int digest_message(int mlen)
 {
 	blake2b_state state;
-	if (mlen < 0 || mlen > MLEN_MAX)
+	if (mlen < 1 || mlen > MLEN_MAX)
 		return 1;
 	blake2b_init(&state, 64);
 	blake2b_update(&state, message, mlen);
@@ -42,7 +42,7 @@ int create_signature(int mlen)
 	sc25519 sck, scs, scsk;
 	ge25519 ger;
 	blake2b_state state;
-	if (mlen < 0 || mlen > MLEN_MAX)
+	if (mlen < 1 || mlen > MLEN_MAX)
 		return 1;
 	blake2b_init(&state, 64);
 	blake2b_update(&state, private_key, 32);
@@ -96,7 +96,7 @@ int verify_signature(int mlen)
 	ge25519 get1, get2;
 	sc25519 schram, scs;
 	blake2b_state state;
-	if (mlen < 0 || mlen > MLEN_MAX)
+	if (mlen < 1 || mlen > MLEN_MAX)
 		return 1;
 	if (signature[63] & 224)
 		return 1;
