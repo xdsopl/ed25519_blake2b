@@ -22,14 +22,16 @@ __attribute__((visibility("default")))
 unsigned char message[MLEN_MAX];
 
 __attribute__((visibility("default")))
-int digest_message(int mlen)
+int digest_message(int mlen, int dlen)
 {
 	blake2b_state state;
 	if (mlen < 1 || mlen > MLEN_MAX)
 		return 1;
-	blake2b_init(&state, 64);
+	if (dlen < 1 || dlen > 64)
+		return 1;
+	blake2b_init(&state, dlen);
 	blake2b_update(&state, message, mlen);
-	blake2b_final(&state, digest, 64);
+	blake2b_final(&state, digest, dlen);
 	return 0;
 }
 

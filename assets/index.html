@@ -46,7 +46,7 @@ WebAssembly.instantiateStreaming(fetch("crypto.wasm"))
 		let signature = new Uint8Array(buffer, wasm.signature, 64);
 		print_hex("Signature", signature);
 		start = performance.now();
-		wasm.digest_message(message.length);
+		wasm.digest_message(message.length, 64);
 		end = performance.now();
 		print_ms("digest_message", start, end);
 		let digest = new Uint8Array(buffer, wasm.digest, 64);
@@ -61,7 +61,7 @@ WebAssembly.instantiateStreaming(fetch("crypto.wasm"))
 		print_hex("Signature", signature);
 		print_hex("Message", message);
 		start = performance.now();
-		wasm.digest_message(message.length);
+		wasm.digest_message(message.length, 64);
 		end = performance.now();
 		print_ms("digest_message", start, end);
 		print_hex("Digest", digest);
