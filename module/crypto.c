@@ -24,9 +24,9 @@ unsigned char message[MLEN_MAX];
 __attribute__((visibility("default")))
 int digest_message(int mlen)
 {
+	blake2b_state state;
 	if (mlen < 0 || mlen > MLEN_MAX)
 		return 1;
-	blake2b_state state;
 	blake2b_init(&state, 64);
 	blake2b_update(&state, message, mlen);
 	blake2b_final(&state, digest, 64);
@@ -71,7 +71,7 @@ int create_signature(int mlen)
 }
 
 __attribute__((visibility("default")))
-int create_fingerprint()
+int create_fingerprint(void)
 {
 	unsigned char az[64];
 	sc25519 scsk;
