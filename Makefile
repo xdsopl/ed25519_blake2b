@@ -6,7 +6,7 @@ CC = clang
 CFLAGS = -ffreestanding -fvisibility=hidden --target=wasm32
 LDFLAGS = -nostdlib -Wl,--export-dynamic,--no-entry
 
-CFLAGS += -std=c89 -W -Wall -pedantic -O2 -Iquirks
+CFLAGS += -std=c89 -W -Wall -pedantic -Wno-long-long -O2 -Iquirks
 BLAKE2 = -Iblake2_ref
 CRYPTO = -Ied25519_ref -DCRYPTO_NAMESPACE\(name\)=crypto_\#\#name
 
